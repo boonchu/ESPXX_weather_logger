@@ -32,26 +32,28 @@ See more at http://blog.squix.ch
  **************************/
 
 
-const char* ssid     = "yourssid";
-const char* password = "yourpassw0rd";
+const char* ssid     = "CPAR_2G";
+const char* password = "throwmyapple@bottomof1";
 
 const char* host = "api.thingspeak.com";
 
-const char* THINGSPEAK_API_KEY = "XXX";
+// my channel (public mode)
+// https://thingspeak.com/channels/409552
+const char* THINGSPEAK_API_KEY = "3RNS8P07KQZUOHHO";
 
 // DHT Settings
 #define DHTPIN D6     // what digital pin we're connected to. If you are not using NodeMCU change D6 to real pin
 
 
 // Uncomment whatever type you're using!
-//#define DHTTYPE DHT11   // DHT 11
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+#define DHTTYPE DHT11   // DHT 11
+//#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 //#define DHTTYPE DHT21   // DHT 21 (AM2301)
 
 const boolean IS_METRIC = true;
 
-// Update every 600 seconds = 10 minutes. Min with Thingspeak is ~20 seconds
-const int UPDATE_INTERVAL_SECONDS = 600;
+// Update every 60 seconds = 1 minutes. Min with Thingspeak is ~20 seconds
+const int UPDATE_INTERVAL_SECONDS = 50;
 
 /***************************
  * End Settings
@@ -99,39 +101,45 @@ void loop() {
     // read values from the sensor
     float humidity = dht.readHumidity();
     float temperature = dht.readTemperature(!IS_METRIC);
+    if (isnan(temperature) || isnan(humidity)) {
+      Serial.println("Failed to read from DHT");
+      delay(1);
+    } else {
+      // We now create a URI for the request
+      String url = "/update?api_key=";
+      url += THINGSPEAK_API_KEY;
+      url += "&field1=";
+      url += String(temperature);
+      url += "&field2=";
+      url += String(humidity);
     
-    // We now create a URI for the request
-    String url = "/update?api_key=";
-    url += THINGSPEAK_API_KEY;
-    url += "&field1=";
-    url += String(temperature);
-    url += "&field2=";
-    url += String(humidity);
+      Serial.print("Requesting URL: ");
+      Serial.println(url);
     
-    Serial.print("Requesting URL: ");
-    Serial.println(url);
-    
-    // This will send the request to the server
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+      // This will send the request to the server
+      client.print(String("GET ") + url + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" + 
                  "Connection: close\r\n\r\n");
-    delay(10);
-    while(!client.available()){
-      delay(100);
-      Serial.print(".");
-    }
-    // Read all the lines of the reply from server and print them to Serial
-    while(client.available()){
-      String line = client.readStringUntil('\r');
-      Serial.print(line);
-    }
+      delay(10);
+      while(!client.available()){
+        delay(100);
+        Serial.print(".");
+      }
+      // Read all the lines of the reply from server and print them to Serial
+      while(client.available()){
+        String line = client.readStringUntil('\r');
+        Serial.print(line);
+      }
     
-    Serial.println();
-    Serial.println("closing connection");
+      Serial.println();
+      Serial.println("closing connection");
+      // Go back to sleep. If your sensor is battery powered you might
+      // want to use deep sleep here
+      // delay(1000 * UPDATE_INTERVAL_SECONDS);
+      Serial.println("Going into deep sleep for 50 seconds");
+      ESP.deepSleep(1000000 * UPDATE_INTERVAL_SECONDS, WAKE_RF_DEFAULT); // 50 seconds deep sleep
+    }
 
 
-  // Go back to sleep. If your sensor is battery powered you might
-  // want to use deep sleep here
-  delay(1000 * UPDATE_INTERVAL_SECONDS);
 }
 
