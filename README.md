@@ -1,7 +1,8 @@
 #### Weather Logger (DHT11 sensor) ####
 
+![weather logger gif](https://github.com/boonchu/ESPXX_weather_logger/blob/master/espxx_weather_logger.gif)
 
-This project work is part two that resume from previous one. I posted the first project in github. Note to understand how to build out the weather station first before continues. This unit sends data to Thingspeak API using registered "allow-to-write-data" authentication key. Two available columns are Temperature and Humidty. These two records is being used by ESP 12E weather station unit. If you are interested in, you can click to this link for instructions to build the ESP 12E weather station unit, https://github.com/boonchu/ESPXX_weather_station
+This project work is part two that resume from previous one. I posted the first project in github. Note to understand how to build out the weather station first before continues. This project describe only how unit sends data to Thingspeak API using registered "allow-to-write-data" authentication key. Two available columns are Temperature and Humidty. These two records is being used by ESP 12E weather station unit. If you are interested in, you can click to this link for instructions to build the ESP 12E weather station unit, https://github.com/boonchu/ESPXX_weather_station
 
 * Hardware:
 	- ESP8266 12E
@@ -9,6 +10,8 @@ This project work is part two that resume from previous one. I posted the first 
 	- Power source such as batteries (3.3 volts)
 
 * Schematic:
+
+![weather logger_schematic](https://github.com/boonchu/ESPXX_weather_logger/blob/master/weather_logger.png)
 
 ```
 Consult pin layouts from manufacturers. Table below is *ONLY* sample pin that use for my unit.
@@ -28,6 +31,9 @@ wire GND | pin GND
 
 ```
 Note to add special wire from 12E unit itself from RST pin to D0 pin to support deep sleep feature.
+
+      Serial.println("Going into deep sleep for 50 seconds");
+      ESP.deepSleep(1000000 * UPDATE_INTERVAL_SECONDS, WAKE_RF_DEFAULT); // 50 seconds deep sleep
 ```
 
 * Preparation:
