@@ -30,9 +30,27 @@ See more at http://blog.squix.ch
 // Initialize the temperature/ humidity sensor
 DHT dht(DHTPIN, DHTTYPE);
 
+// Battery monitoring
+ADC_MODE(ADC_VCC);
+#define BATT_CRT 2.2 // critical battery voltage -> go sleep
+float vcc = 0.0;
+
+//// Wifi RSSI connection dBm
+int32_t rssi = 0;
+
 void setup() {
   Serial.begin(115200);
   delay(10);
+
+  vcc = ESP.getVcc()/1024.00f;
+  Serial.print("Vcc: ");
+  Serial.print(vcc);
+  Serial.println(" Volts");
+
+  if (vcc <= BATT_CRT) {
+    Serial.print("Battery critical, Go sleep!");
+    deepSleep();
+  }
 
   // We start by connecting to a WiFi network
 
@@ -47,6 +65,14 @@ void setup() {
     delay(500);
     Serial.print(".");
   }
+
+  if (!rssi){
+    /// WiFi RSSI
+    rssi = WiFi.RSSI();
+    Serial.print("Wifi signal strength index (Rssi): ");
+    Serial.print(rssi);
+    Serial.println(" dBm");
+  } 
 
   Serial.println("");
   Serial.println("WiFi connected");  
@@ -80,6 +106,10 @@ void loop() {
       url += String(temperature);
       url += "&field2=";
       url += String(humidity);
+      url += "&field3=";
+      url += String(rssi);
+      url += "&field4=";
+      url += String(vcc);      
     
       Serial.print("Requesting URL: ");
       Serial.println(url);
@@ -101,13 +131,17 @@ void loop() {
     
       Serial.println();
       Serial.println("closing connection");
-      // Go back to sleep. If your sensor is battery powered you might
-      // want to use deep sleep here
-      // delay(1000 * UPDATE_INTERVAL_SECONDS);
-      Serial.println("Going into deep sleep for 50 seconds");
-      ESP.deepSleep(1000000 * UPDATE_INTERVAL_SECONDS, WAKE_RF_DEFAULT); // 50 seconds deep sleep
+      deepSleep();
     }
 
 
+}
+
+void deepSleep() {
+  // Go back to sleep. If your sensor is battery powered you might
+  // want to use deep sleep here
+  // delay(1000 * UPDATE_INTERVAL_SECONDS);
+  Serial.println("Going into deep sleep for 300 seconds");
+  ESP.deepSleep(1000000 * UPDATE_INTERVAL_SECONDS, WAKE_RF_DEFAULT); // 300 seconds deep sleep
 }
 
